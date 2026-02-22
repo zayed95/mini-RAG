@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProjectController
 from models import ResponseSignal
+from .schemas.data import ProcessRequest
 import os, aiofiles
 import logging
 
@@ -13,6 +14,8 @@ data_router = APIRouter(
     tags=['api', 'data']
 )
 
+
+# The first endpoint to upload a file
 @data_router.post("/upload/{project_id}")
 async def upload(project_id: str, file: UploadFile, app_settings: Settings=Depends(get_settings)):
 
@@ -56,3 +59,11 @@ async def upload(project_id: str, file: UploadFile, app_settings: Settings=Depen
                 "file_id": file_id
                 }
         )
+
+# The second endpoint to process a request
+@data_router.post("/process/{project_id}")
+async def process_endpoint(project_id: str, process_request: ProcessRequest):
+
+    file_id = process_request.file_id
+
+    return {"file_id": file_id}
