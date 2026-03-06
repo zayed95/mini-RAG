@@ -23,7 +23,7 @@ data_router = APIRouter(
 async def upload(request: Request, project_id: str, file: UploadFile, app_settings: Settings=Depends(get_settings)):
 
     # The following 2 lines get the project from the database or create the project if it doesn't exist
-    project_model = ProjectModel(db_client=request.app.db_client)
+    project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
     project = await project_model.get_or_create_project(project_id=project_id)
 
     # Initiate an instance of the DataController to take advantage of its validation function
@@ -77,8 +77,8 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     chunk_overlap = process_request.chunk_overlap
     do_reset = process_request.do_reset
 
-    chunk_model = ChunkModel(db_client=request.app.db_client)
-    project_model = ProjectModel(db_client=request.app.db_client)
+    chunk_model = await ChunkModel.create_instance(db_client=request.app.db_client)
+    project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
     project = await project_model.get_or_create_project(project_id=project_id)
 
     
