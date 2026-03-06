@@ -33,7 +33,7 @@ class ProjectModel(BaseDataModel):
 
         result = await self.collection.insert_one(project.dict(by_alias=True, exclude_unset=True))
         # Set the current project_id to be the inserted id that we just created
-        project._id = result.inserted_id
+        project.id = result.inserted_id
         # Return the updated object
         return project
 
