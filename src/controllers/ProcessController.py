@@ -27,7 +27,7 @@ class ProcessController(BaseController):
             file_id
         )
 
-        if os.path.exists(file_path):
+        if not os.path.exists(file_path):
             return None
 
         if file_ext == ProcessingEnum.TXT.value:

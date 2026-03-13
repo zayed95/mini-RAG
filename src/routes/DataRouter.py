@@ -69,7 +69,7 @@ async def upload(request: Request, project_id: str, file: UploadFile, app_settin
 
     asset_resource = Asset(
         asset_project_id=project.id,
-        asset_type=AssetTypeEnum.ASSET_TYPE_FILE.value,
+        asset_type=AssetTypeEnum.FILE.value,
         asset_name=file_id,
         asset_size=os.path.getsize(file_path)
     )
@@ -95,26 +95,53 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     chunk_overlap = process_request.chunk_overlap
     do_reset = process_request.do_reset
 
-    chunk_model = await ChunkModel.create_instance(db_client=request.app.db_client)
-    project_model = await ProjectModel.create_instance(db_client=request.app.db_client)
-    project = await project_model.get_or_create_project(project_id=project_id)
-
-
-    #
-    project_file_ids = []
-    if process_request.file_id:
-        project_file_ids = [process_request.file_id]
-    else:
-        asset_model = await AssetModel.create_instance(
+    # Create models needed for the processing
+    chunk_model = await ChunkModel.create_instance(
+        db_client=request.app.db_client
+        )
+    project_model = await ProjectModel.create_instance(
+        db_client=request.app.db_client
+        )
+    project = await project_model.get_or_create_project(
+        project_id=project_id
+        )
+    asset_model = await AssetModel.create_instance(
             db_client=request.app.db_client
         )
 
-        project_files = await asset_model.get_all_project_assets(
-            asset_project_id=project.id,
-            asset_type=AssetTypeEnum.ASSET_TYPE_FILE.value
+
+    # Getting the file_id if it was passed in and if not iterating over all the pre-existing files to process all of them 
+    project_file_ids = {}
+    if process_request.file_id:
+        
+        asset_record = await asset_model.get_asset_record(
+            asset_name=process_request.file_id,
+            asset_project_id=project.id
         )
 
-        project_file_ids = [record['asset_name'] for record in project_files]
+        if asset_record is None:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "signal": ResponseSignal.FILE_ID_ERROR.value
+                }
+            )
+        
+        project_file_ids = {
+            asset_record.id: asset_record.asset_name
+        }
+
+    else:
+        
+        project_files = await asset_model.get_all_project_assets(
+            asset_project_id=project.id,
+            asset_type=AssetTypeEnum.FILE.value
+        )
+
+        project_file_ids = {
+            record.id: record.asset_name 
+            for record in project_files
+            }
 
         if len(project_file_ids) == 0:
             return JSONResponse(
@@ -132,7 +159,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     if do_reset == 1:
         _ = await chunk_model.delete_chunks_by_project_id(project_id=project.id)
 
-    for file_id in project_file_ids:
+    for asset_id, file_id in project_file_ids.items():
 
         file_content = process_controller.get_file_content(file_id=file_id)
 
@@ -148,6 +175,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
         )
 
         if file_chunks is None or len(file_chunks) == 0:
+
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={
@@ -159,7 +187,8 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
                 chunk_text=chunk.page_content,
                 chunk_metadata=chunk.metadata,
                 chunk_order=i+1,
-                chunk_project_id=project.id
+                chunk_project_id=project.id,
+                chunk_asset_id=asset_id
             )
 
             for i, chunk in enumerate(file_chunks)
@@ -170,7 +199,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
 
     return JSONResponse(
             content={
-                "signal": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
+                "signal": ResponseSignal.PROCESSING_SUCCESS.value,
                 "inserted_chunks": chunk_num,
                 "number_of_files": no_files
             }
