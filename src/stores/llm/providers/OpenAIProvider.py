@@ -27,10 +27,10 @@ class OpenAIProvider(LLMInterface):
         self.logger = logging.getLogger(__name__)
 
     
-    def set_generation_model(self, model_id):
+    def set_generation_model(self, model_id: str):
         self.generation_model_id = model_id
 
-    def set_embedding_model(self, model_id, embedding_size):
+    def set_embedding_model(self, model_id: str, embedding_size: int):
         self.embedding_model_id = model_id
         self.embedding_size = embedding_size
 
@@ -68,7 +68,7 @@ class OpenAIProvider(LLMInterface):
         return response.choices[0].message["content"]
         
     
-    def embed_text(self, text: str=None, document_type: str=None):
+    def embed_text(self, text=None, document_type: str=None):
         
         if not self.client:
             self.logger.error("OpenAI client was not set!")
