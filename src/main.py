@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from routes import BaseRouter, DataRouter
 from motor.motor_asyncio import AsyncIOMotorClient
 from helpers.config import get_settings
+from stores import vectordb
 from stores.llm.LLMFactory import LLMFactory
+from stores.vectordb.VectorDBFactory import VectorDBFactory
 
 app = FastAPI()
 
@@ -12,21 +14,30 @@ async def start_db_client():
 
     settings = get_settings()
     llm_factory = LLMFactory(settings)
+    vectordb_factory = VectorDBFactory(settings)
 
+    # Connecting to mongodb
     app.mongo_conn = AsyncIOMotorClient(settings.MONGO_URL)
     app.db_client = app.mongo_conn[settings.MONGODB_DATABASE]
 
+    # Setting the generation client
     app.generation_client = llm_factory.create(provider=settings.GENERATION_BACKENED)
     app.generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
 
+    # Setting the embedding client
     app.embedding_backend = llm_factory.create(provider=settings.EMBEDDING_BACKEND)
     app.embedding_backend.set_embedding_model(model_id=settings.EMBEDDING_BACKEND,
                                               embedding_size=settings.EMBEDDING_MODEL_SIZE)
 
+    # Setting the vectordb client
+    app.vectordb_client = vectordb_factory.create(provider=settings.VECTOR_DB_BACKEND)
+    app.vectordb_client.connect()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
     app.mongo_conn.close()
+
+    app.vectordb_client.disconnect()
 
     
 app.include_router(BaseRouter.base_router)
