@@ -66,12 +66,16 @@ class QdrantDBProvider(VectorDBInterface):
             return None
         
         try:
-            _ = self.client.upload_records(
+            _ = self.client.upsert(
                 collection_name=collection_name,
-                records=[
-                    models.Record(
+                points=[
+                    models.PointStruct(
+                        id=[record_id],
                         vector=vector,
-                        payload={"text": text, "metadata": metadata}
+                        payload={
+                            "text": text, 
+                            "metadata": metadata
+                            }
                     )
                 ]
             )
@@ -90,7 +94,7 @@ class QdrantDBProvider(VectorDBInterface):
             metadata = [None] * len(texts)
         
         if not record_ids:
-            record_ids = [None] * len(texts)
+            record_ids = list(range(0, len(texts)))
 
         for i in range(0, len(texts), batch_size):
             batch_end = i + batch_size
@@ -98,20 +102,25 @@ class QdrantDBProvider(VectorDBInterface):
             text_batch = texts[i:batch_end]
             metadata_batch = metadata[i:batch_end]
             vector_batch = vectors[i:batch_end]
+            record_batch = record_ids[i:batch_end]
 
             record_batch = [
-                models.Record(
+                models.PointStruct(
+                    id=record_batch[x],
                     vector=vector_batch[x],
-                    payload={"text": text_batch[x], "metadata": metadata_batch[x]}
+                    payload={
+                        "text": text_batch[x], 
+                        "metadata": metadata_batch[x]
+                        }
                 )
 
                 for x in range(len(text_batch))
             ]
 
             try: 
-                _ = self.client.upload_records(
+                _ = self.client.upsert(
                 collection_name=collection_name,
-                records=record_batch
+                points=record_batch
                 )
 
             except Exception as e:
@@ -122,8 +131,8 @@ class QdrantDBProvider(VectorDBInterface):
 
 
     def search_by_vector(self, collection_name: str, vector: list, limit: int=5):
-        return self.client.search(
+        return self.client.query_points(
             collection_name=collection_name,
-            query_vector=vector,
+            query=vector,
             limit=limit
         )
