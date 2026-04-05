@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     EMBEDDING_BACKEND: str
 
     OPENAI_API_KEY: str
-    ANTHROPC_API_KEY: str
+    ANTHROPIC_API_KEY: str
     OPENAI_API_URL: str
     COHERE_API_KEY: str
 

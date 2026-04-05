@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProjectController, ProcessController
-from .schemas.data import ProcessRequest
+from routes.schemas.data import ProcessRequest
 from models.db_schemas import DataChunk, Asset
 from models.ProjectModel import ProjectModel
 from models.ChunkModel import ChunkModel
