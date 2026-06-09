@@ -95,7 +95,8 @@ async def get_project_index_info(request: Request, project_id: str):
     nlp_controller = NLPController(
                                     vectordb_client=request.app.vectordb_client,
                                    embedding_client=request.app.embedding_client,
-                                   generation_client=request.app.generation_client
+                                   generation_client=request.app.generation_client,
+                                   template_parser=request.app.template_parser
                                    )
     
     collection_info = nlp_controller.get_vector_collection_info(project=project)
@@ -119,7 +120,8 @@ async def search(request: Request, search_request: SearchRequest, project_id: st
 
     nlp_controller = NLPController(vectordb_client=request.app.vectordb_client,
                                    embedding_client=request.app.embedding_client,
-                                   generation_client=request.app.generation_client)
+                                   generation_client=request.app.generation_client,
+                                   template_parser=request.app.template_parser)
     
     results = nlp_controller.search_vectordb_collection(
         project=project,
@@ -154,7 +156,8 @@ async def answer(request: Request, search_request: SearchRequest, project_id: st
 
     nlp_controller = NLPController(vectordb_client=request.app.vectordb_client,
                                    embedding_client=request.app.embedding_client,
-                                   generation_client=request.app.generation_client)
+                                   generation_client=request.app.generation_client,
+                                   template_parser=request.app.template_parser)
     
     answer, full_prompt, chat_history = nlp_controller.answer_rag_question(
         project=project,
