@@ -1,3 +1,5 @@
+from xml.dom.minidom import Document
+
 from pydantic import BaseModel, Field
 from typing import Optional
 from bson.objectid import ObjectId
@@ -25,3 +27,7 @@ class DataChunk(BaseModel):
                 "unique": False
             }
         ]
+    
+class RetrievedDocument(BaseModel):
+    text: str
+    score: float

@@ -1,6 +1,9 @@
+import os
+
 from ..LLMInterface import LLMInterface
 from ..LLMEnums import AnthropicEnum
 from anthropic import Anthropic
+import voyageai
 import logging
 
 
@@ -18,9 +21,9 @@ class AnthropicProvider(LLMInterface):
         self.generation_model_id = None
         self.embedding_model_id = None
         self.embedding_model_size = None
-
-        self.client = Anthropic(api_key=api_key)
-
+        self.gen_client = Anthropic()
+        self.embed_client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
+        self.enums = AnthropicEnum
         self.logger = logging.getLogger(__name__)
 
     
@@ -39,7 +42,7 @@ class AnthropicProvider(LLMInterface):
     def generate_text(self, prompt: str, chat_history: list=[],  
                       max_output_tokens: int=None, temperature: float = None):
         
-        if not self.client:
+        if not self.gen_client:
             self.logger.error("Anthropic client is not set!")
             return None
         
@@ -50,7 +53,7 @@ class AnthropicProvider(LLMInterface):
         max_output_tokens = max_output_tokens if max_output_tokens else self.default_max_output_tokens
         temperature = temperature if temperature else self.default_temperature
 
-        response = self.client.messages.create(
+        response = self.gen_client.messages.create(
             max_tokens=max_output_tokens,
             messages=[self.construct_prompt(prompt=prompt, role=AnthropicEnum.USER.value)],
             model=self.generation_model_id
@@ -63,7 +66,25 @@ class AnthropicProvider(LLMInterface):
         return response.content
 
     def embed_text(self, text: None, document_type: str=None):
-        raise NotImplementedError
+        if not self.embed_client:
+            self.logger.error("Anthropic client was not set!")
+            return None
+        
+        if not self.embedding_model_id:
+            self.logger.error("Embedding model for Anthropic was not set")
+            return None
+        
+        response = self.embed_client.embed(
+            self.process_text(text=text),
+            model=self.embedding_model_id,
+            input_type=document_type
+        )
+
+        if not response or not response.data or len(response.data) == 0 or not response.data.embedding:
+            self.logger.error("Error with embedding text with OpenAI")
+            return None
+        
+        return response.data.embedding
     
     def construct_prompt(self, prompt: str, role: str):
         return {

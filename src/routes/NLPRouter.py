@@ -1,3 +1,4 @@
+from email.policy import HTTP
 from importlib.resources import contents
 
 from fastapi import APIRouter, status, Request
@@ -35,7 +36,8 @@ async def index_project(request: Request, project_id: str, push_request: PushReq
     nlp_controller = NLPController(
                                     vectordb_client=request.app.vectordb_client,
                                    embedding_client=request.app.embedding_client,
-                                   generation_client=request.app.generation_client
+                                   generation_client=request.app.generation_client,
+                                   template_parser=request.app.template_parser
                                    )
 
     has_records = True
@@ -139,3 +141,39 @@ async def search(request: Request, search_request: SearchRequest, project_id: st
             "results": results
         }
     )
+
+@nlp_router.post("/index/answer/{project_id}")
+async def answer(request: Request, search_request: SearchRequest, project_id: str):
+
+    project_model = await ProjectModel(
+        db_client=request.app.db_client
+        ).create_instance(db_client=request.app.db_client)
+    
+    project = await project_model.get_or_create_project(project_id=project_id)
+
+
+    nlp_controller = NLPController(vectordb_client=request.app.vectordb_client,
+                                   embedding_client=request.app.embedding_client,
+                                   generation_client=request.app.generation_client)
+    
+    answer, full_prompt, chat_history = nlp_controller.answer_rag_question(
+        project=project,
+        query=search_request.text,
+        limit=search_request.limit
+    )
+
+    if not answer:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "signal": ResponseSignal.RAG_ANSWER_ERROR.value
+                }
+            )      
+    return JSONResponse(
+        content={
+            "signal": ResponseSignal.RAG_ANSWER_SUCCESS.value,
+            "answer": answer,
+            "full_prompt": full_prompt,
+            "chat_history": chat_history
+            }
+        )   

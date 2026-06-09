@@ -8,12 +8,14 @@ import json
 
 class NLPController(BaseController):
 
-    def __init__(self, vectordb_client, embedding_client, generation_client):
+    def __init__(self, vectordb_client, embedding_client,
+                  generation_client, template_parser):
         super().__init__()
 
         self.vectordb_client = vectordb_client
         self.embedding_client = embedding_client
         self.generation_client = generation_client
+        self.template_parser = template_parser
 
     
     def create_collection_name(self, project_id: str):
@@ -86,6 +88,45 @@ class NLPController(BaseController):
         if not results:
             False
 
-        return json.loads(
-                json.dumps(results, default=lambda x: x.__dict__)
+        return results
+    
+    def answer_rag_question(self, project: Project, query: str, limit: int = 5):
+
+        answer, full_prompt, chat_history = None, None, None
+
+        retrieved_documents = self.search_vectordb_collection(
+            project=project,
+            text=query,
+            limit=limit
+        )
+
+        if not retrieved_documents or len(retrieved_documents) == 0:
+            return None, None, None
+        
+        system_prompt = self.template_parser.get("rag", "system_prompt")
+
+        document_prompt = "/n".join([
+            self.template_parser.get("rag", "document_prompt", {
+                "doc_number": idx+1,
+                "chunk_text": document.text
+            })
+            for idx, document in enumerate(retrieved_documents)
+        ])
+
+        footer_prompt = self.template_parser.get("rag", "footer_prompt")
+
+        chat_history = [
+            self.generation_client.construct_prompt(
+                prompt=system_prompt,
+                role=self.generation_client.enums.SYSTEM.value
             )
+        ]
+
+        full_prompt = "/n/n".join([document_prompt, footer_prompt])
+
+        answer = self.generation_client.generate_text(
+            prompt=full_prompt,
+            chat_history=chat_history
+        )
+
+        return answer, full_prompt, chat_history

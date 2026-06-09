@@ -24,6 +24,8 @@ class OpenAIProvider(LLMInterface):
             api_url=self.api_url
         )
 
+        self.enums = OpenAIEnum
+        
         self.logger = logging.getLogger(__name__)
 
     

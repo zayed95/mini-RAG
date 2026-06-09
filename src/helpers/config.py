@@ -1,3 +1,5 @@
+from ast import Str
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -17,6 +19,7 @@ class Settings(BaseSettings):
 
     OPENAI_API_KEY: str
     ANTHROPIC_API_KEY: str
+    VOYAGE_API_KEY: str
     OPENAI_API_URL: str
     COHERE_API_KEY: str
 
@@ -31,6 +34,9 @@ class Settings(BaseSettings):
     VECTOR_DB_BACKEND: str
     VECTOR_DB_PATH: str
     VECTOR_DB_DISTANCE_METHOD: str
+
+    PRIMARY_LANG: str = "en"
+    DEFAULT_LANG: str = "en"
 
     class Config:
         env_file = ".env"

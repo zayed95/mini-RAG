@@ -10,7 +10,7 @@ class LLMFactory():
 
         if provider == LLMEnum.ANTHROPIC.value:
             return AnthropicProvider(
-                api_key=self.config.ANTHROPC_API_KEY,
+                api_key=self.config.ANTHROPIC_API_KEY,
                 max_input_characters=self.config.INPUT_DEFAULT_MAX_CHARACTERS,
                 max_output_tokens=self.config.GENERATION_DEFAULT_MAX_TOKENS,
                 temperature=self.config.GENERATION_DEFAULT_TEMPERATURE
