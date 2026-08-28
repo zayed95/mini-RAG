@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from routes import BaseRouter, DataRouter, NLPRouter
-from motor.motor_asyncio import AsyncIOMotorClient
 from helpers.config import get_settings
 from stores import vectordb
 from stores.llm.LLMFactory import LLMFactory
 from stores.vectordb.VectorDBFactory import VectorDBFactory
 from stores.llm.templates.template_parser import TemplateParser
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 app = FastAPI()
 
@@ -17,9 +17,12 @@ async def start_db_client():
     llm_factory = LLMFactory(settings)
     vectordb_factory = VectorDBFactory(settings)
 
-    # Connecting to mongodb
-    app.mongo_conn = AsyncIOMotorClient(settings.MONGO_URL)
-    app.db_client = app.mongo_conn[settings.MONGODB_DATABASE]
+    # Connecting to the database
+    postgres_conn = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_MAIN_DATABASE}"
+    app.db_engine = create_async_engine(postgres_conn)
+    app.db_client = async_sessionmaker(
+        app.db_engine, expire_on_commit=False
+    )
 
     # Setting the generation client
     app.generation_client = llm_factory.create(provider=settings.GENERATION_BACKENED)
@@ -41,8 +44,8 @@ async def start_db_client():
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    app.mongo_conn.close()
 
+    app.db_engine.dispose()
     app.vectordb_client.disconnect()
 
     

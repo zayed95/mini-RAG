@@ -14,3 +14,7 @@ cohere==5.20.7
 anthropic==0.84.0
 qdrant-client==1.17.1
 voyageai==0.4.0
+SQLAlchemy==2.0.52
+asyncpg==0.31.0
+alembic==1.19.1
+psycopg2==2.9.12

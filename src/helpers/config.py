@@ -1,5 +1,3 @@
-from ast import Str
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -11,8 +9,11 @@ class Settings(BaseSettings):
     FILE_MAX_SIZE: int
     FILE_DEFAULT_CHUNK_SIZE: int
 
-    MONGO_URL: str
-    MONGODB_DATABASE: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_USER: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_MAIN_DATABASE: str
 
     GENERATION_BACKENED: str
     EMBEDDING_BACKEND: str
