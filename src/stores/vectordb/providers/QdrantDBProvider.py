@@ -133,20 +133,20 @@ class QdrantDBProvider(VectorDBInterface):
 
     def search_by_vector(self, collection_name: str, vector: list, limit: int=5)  -> None | List[RetrievedDocument]:
 
-        results = self.client.query_points(
+        result = self.client.query_points(
             collection_name=collection_name,
             query=vector,
             limit=limit
         )
 
-        if not results:
+        if not result:
             return None
         
         return [
             RetrievedDocument(**{
-                "score": result.score,
-                "text": result.payload["text"]
+                "score": point.score,
+                "text": point.payload["text"]
             })
 
-            for result in results
+            for point in result.points
         ]

@@ -1,5 +1,5 @@
 from .BaseDataModel import BaseDataModel
-from .db_schemas.data_chunk import DataChunk
+from .db_schemas.minirag.schema.data_chunk import DataChunk
 from .enums.DatabaseEnum import DatabaseEnum
 from bson.objectid import ObjectId
 from sqlalchemy import select, func, delete
@@ -20,7 +20,7 @@ class ChunkModel(BaseDataModel):
     async def create_chunk(self, chunk: DataChunk):
         async with self.db_client() as session:
             async with session.begin():
-                await session.add(chunk)
+                session.add(chunk)
             await session.commit()
             await session.refresh(chunk)   
         return chunk
@@ -40,21 +40,21 @@ class ChunkModel(BaseDataModel):
                 for i in range(0, len(chunks), batch_size):
 
                     batch = chunks[i:i+batch_size]
-                    await session.add_all(batch)
+                    session.add_all(batch)
                 await session.commit()
         return len(chunks)
     
 
     async def delete_chunks_by_project_id(self, project_id: ObjectId):
         async with self.db_client() as session:
-            query = delete(DataChunk).where(DataChunk.project_id == project_id)
+            query = delete(DataChunk).where(DataChunk.chunk_project_id == project_id)
             result = await session.execute(query)
             await session.commit()
         return result.rowcount
     
     async def get_project_chunks(self, project_id: ObjectId, page_no: int=1, page_size: int=50):
         async with self.db_client() as session:
-            query = select(DataChunk).where(DataChunk.project_id == project_id).offset((page_no - 1) * page_size).limit(page_size)
+            query = select(DataChunk).where(DataChunk.chunk_project_id == project_id).offset((page_no - 1) * page_size).limit(page_size)
             result = await session.execute(query)
             records = result.scalars().all()
         return records

@@ -21,6 +21,7 @@ class Asset(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
     project = relationship("Project", back_populates="assets")
+    chunks = relationship("DataChunk", back_populates="asset")
 
     __tableargs__ = (
         Index('ix_asset_project_id', asset_project_id),

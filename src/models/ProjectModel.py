@@ -1,7 +1,7 @@
 from models.db_schemas.minirag.schema import project
 
 from .BaseDataModel import BaseDataModel
-from .db_schemas.project import Project
+from .db_schemas.minirag.schema.project import Project
 from .enums.DatabaseEnum import DatabaseEnum
 from sqlalchemy import select, func
 
@@ -19,19 +19,19 @@ class ProjectModel(BaseDataModel):
     async def create_project(self, project: Project):
         async with self.db_client() as session:
             async with session.begin():
-                await session.add(project)
+                session.add(project)
             await session.commit()
             await session.refresh(project)    
         return project    
 
-    async def get_or_create_project(self, project_id: str):
+    async def get_or_create_project(self, project_id: int):
         async with self.db_client() as session:
             async with session.begin():
                 query = await session.execute(select(Project).where(Project.project_id == project_id))
                 project = query.scalar_one_or_none()
                 if project is None:
                     project_rec = Project(project_id=project_id)
-                    project = self.create_project(project_rec)
+                    project = await self.create_project(project_rec)
         return project
                 
 

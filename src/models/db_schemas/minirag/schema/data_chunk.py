@@ -20,8 +20,8 @@ class DataChunk(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
-    project = relationship("Project", back_populates="data_chunks")
-    asset = relationship("Asset", back_populates="data_chunks")
+    project = relationship("Project", back_populates="chunks")
+    asset = relationship("Asset", back_populates="chunks")
 
     __tableargs__ = (
         Index('ix_project_id', chunk_project_id)
