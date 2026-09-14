@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List
 
 class Settings(BaseSettings):
     # The use of pydantic library validates the fields before they're used
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     OPENAI_API_URL: str
     COHERE_API_KEY: str
 
+    GENERATION_MODEL_ID_LITERAL: List[str] = None
     GENERATION_MODEL_ID: str
     EMBEDDING_MODEL_ID: str
     EMBEDDING_MODEL_SIZE: int
@@ -32,6 +34,7 @@ class Settings(BaseSettings):
     GENERATION_DEFAULT_MAX_TOKENS: int
     GENERATION_DEFAULT_TEMPERATURE: float
 
+    VECTOR_DB_BACKEND_LITERAL: List[str] = None
     VECTOR_DB_BACKEND: str
     VECTOR_DB_PATH: str
     VECTOR_DB_DISTANCE_METHOD: str

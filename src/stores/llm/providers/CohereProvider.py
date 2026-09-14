@@ -52,7 +52,7 @@ class CohereProvider(LLMInterface):
 
         response = self.client.chat(
             model=self.generation_model_id,
-            messages=self.process_text(text=prompt),
+            messages=[self.construct_prompt(prompt)],
             #chat_history=chat_history,
             temperature=temperature,
             max_tokens=max_output_tokens
@@ -92,8 +92,8 @@ class CohereProvider(LLMInterface):
 
 
     
-    def construct_prompt(self, prompt: str, role: str):
+    def construct_prompt(self, prompt: str, role: str = None):
         return {
-            "role": CohereEnum.USER.value,
-            "text": self.process_text(text=prompt)
+            "role": role if role else CohereEnum.USER.value,
+            "text": prompt
         }
