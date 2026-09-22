@@ -1,8 +1,5 @@
-from cgitb import text
-from curses import meta
-
 from stores.vectordb.VectorDBInterface import VectorDBInterface
-from ..VectorDBEnums import PgVectorTableEnums, PgVectorDistanceMethodEnums, PgVectorIndexTypeEnums
+from ..VectorDBEnums import PgVectorTableEnums, PgVectorIndexTypeEnums
 from models.db_schemas import RetrievedDocument
 from typing import List
 import logging
