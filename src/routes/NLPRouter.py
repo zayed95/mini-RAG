@@ -1,6 +1,3 @@
-from email.policy import HTTP
-from importlib.resources import contents
-
 from fastapi import APIRouter, status, Request
 from fastapi.responses import JSONResponse
 from routes.schemas.nlp import PushRequest, SearchRequest
@@ -9,6 +6,7 @@ from models.ChunkModel import ChunkModel
 from controllers.NLPController import NLPController
 from models import ResponseSignal
 import logging
+from tqdm.auto import tqdm
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -53,6 +51,9 @@ async def index_project(request: Request, project_id: int, push_request: PushReq
         do_reset=push_request.do_reset
     )
 
+    total_chunks_count = await chunk_model.get_chunk_count(project_id=project_id)
+    pbar = tqdm(total=total_chunks_count, desc="Vector Indexing", position=0)
+
     while has_records:
         page_chunks = await chunk_model.get_project_chunks(project_id=project.project_id, page_no=page_no)
 
@@ -63,13 +64,12 @@ async def index_project(request: Request, project_id: int, push_request: PushReq
             has_records = False
             break
 
-        chunk_ids = list(range(idx, idx + len(page_chunks)))
+        chunk_ids = [c.chunk_id for c in page_chunks]
         idx += len(page_chunks)
 
-        is_inserted = nlp_controller.index_into_vector_db(
+        is_inserted = await nlp_controller.index_into_vector_db(
             project=project,
             chunks=page_chunks,
-            do_reset=push_request.do_reset,
             chunk_ids=chunk_ids
         )
 
@@ -82,6 +82,7 @@ async def index_project(request: Request, project_id: int, push_request: PushReq
         )
 
         inserted_items_count += len(page_chunks)
+        pbar.update(inserted_items_count)
     
     return JSONResponse(
         content={
@@ -107,7 +108,7 @@ async def get_project_index_info(request: Request, project_id: int):
                                    template_parser=request.app.template_parser
                                    )
     
-    collection_info = nlp_controller.get_vector_collection_info(project=project)
+    collection_info = await nlp_controller.get_vector_collection_info(project=project)
     # print(collection_info)
     return JSONResponse(
         content={
@@ -131,7 +132,7 @@ async def search(request: Request, search_request: SearchRequest, project_id: in
                                    generation_client=request.app.generation_client,
                                    template_parser=request.app.template_parser)
     
-    results = nlp_controller.search_vectordb_collection(
+    results = await nlp_controller.search_vectordb_collection(
         project=project,
         text=search_request.text,
         limit=search_request.limit
@@ -167,7 +168,7 @@ async def answer(request: Request, search_request: SearchRequest, project_id: in
                                    generation_client=request.app.generation_client,
                                    template_parser=request.app.template_parser)
     
-    answer, full_prompt, chat_history = nlp_controller.answer_rag_question(
+    answer, full_prompt, chat_history = await nlp_controller.answer_rag_question(
         project=project,
         query=search_request.text,
         limit=search_request.limit

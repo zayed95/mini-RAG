@@ -59,11 +59,11 @@ class CohereProvider(LLMInterface):
             max_tokens=max_output_tokens
         )
 
-        if not response or not response.text:
+        if not response:
             self.logger.error("Error generating text with CoHere")
             return None
         
-        return response.text
+        return response.message.content[0].text
     
     def embed_text(self, text: Union[str, List[str]], document_type = None):
         if not self.client:
@@ -99,5 +99,5 @@ class CohereProvider(LLMInterface):
     def construct_prompt(self, prompt: str, role: str = None):
         return {
             "role": role if role else CohereEnum.USER.value,
-            "text": prompt
+            "content": prompt
         }

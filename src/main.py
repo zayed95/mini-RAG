@@ -14,9 +14,8 @@ app = FastAPI()
 async def start_db_client():
 
     settings = get_settings()
-    llm_factory = LLMFactory(settings)
-    vectordb_factory = VectorDBFactory(settings)
-
+    app.settings = settings
+    
     # Connecting to the database
     postgres_conn = f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_MAIN_DATABASE}"
     app.db_engine = create_async_engine(postgres_conn)
@@ -24,6 +23,9 @@ async def start_db_client():
         app.db_engine, expire_on_commit=False
     )
 
+    llm_factory = LLMFactory(settings)
+    vectordb_factory = VectorDBFactory(config=settings, db_client=app.db_client)
+    
     # Setting the generation client
     app.generation_client = llm_factory.create(provider=settings.GENERATION_BACKENED)
     app.generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
@@ -35,7 +37,7 @@ async def start_db_client():
 
     # Setting the vectordb client
     app.vectordb_client = vectordb_factory.create(provider=settings.VECTOR_DB_BACKEND)
-    app.vectordb_client.connect()
+    await app.vectordb_client.connect()
 
     app.template_parser = TemplateParser(
         language=settings.PRIMARY_LANG,
@@ -46,7 +48,7 @@ async def start_db_client():
 async def shutdown_db_client():
 
     await app.db_engine.dispose()
-    app.vectordb_client.disconnect()
+    await app.vectordb_client.disconnect()
 
     
 app.include_router(BaseRouter.base_router)

@@ -1,5 +1,4 @@
 from enum import Enum
-from re import T
 
 class VectorDBEnum(Enum):
     QDRANT = "QDRANT"

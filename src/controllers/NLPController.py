@@ -37,7 +37,7 @@ class NLPController(BaseController):
     
 
     async def index_into_vector_db(self, project: Project, chunks: List[DataChunk], 
-                             chunk_ids: List[int], do_reset: bool=False):
+                             chunk_ids: List[int]):
 
         collection_name = self.create_collection_name(project_id=project.project_id)
 
@@ -45,11 +45,12 @@ class NLPController(BaseController):
         metadata = [chunk.chunk_metadata for chunk in chunks]
         vectors = self.embedding_client.embed_text(text=texts, document_type=DocumentTypeEnum.DOCUMENT.value)
 
-        if not self.vectordb_client.does_collection_exist(collection_name=collection_name):
+        does_collection_exists = await self.vectordb_client.does_collection_exist(collection_name=collection_name)
+        if not does_collection_exists:
             _ = await self.vectordb_client.create_collection(
                 collection_name=collection_name,
                 embedding_size=self.embedding_client.embedding_size,
-                do_reset=do_reset
+                
             )
 
         _ = await self.vectordb_client.insert_many(
@@ -110,7 +111,7 @@ class NLPController(BaseController):
 
         document_prompt = "/n".join([
             self.template_parser.get("rag", "document_prompt", {
-                "doc_number": idx+1,
+                "doc_num": idx+1,
                 "chunk_text": self.generation_client.process_text(document.text)
             })
             for idx, document in enumerate(retrieved_documents)
