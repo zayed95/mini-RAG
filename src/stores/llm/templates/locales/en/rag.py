@@ -2,7 +2,7 @@ from string import Template
 
 # System Prompt
 
-system_prompt = Template("".join([
+system_prompt = Template(" ".join([
     "You are an assistant to generate a response for the user.",
     "",
     "You will be provided by a set of docuemnts associated with the user's query.",
@@ -18,14 +18,14 @@ system_prompt = Template("".join([
     "Be polite and respectful to the user.",
     "",
     "Be precise and concise in your response. Avoid unnecessary information.",
-    "",
+    
 
 ]))
 
 # Document Prompt
 
 document_prompt = Template(
-    "".join([
+    " ".join([
         "Document no: $doc_number",
         "",
         "Content: $chunk_text"
@@ -35,7 +35,7 @@ document_prompt = Template(
 # Footer Prompt
 
 footer_template = Template(
-    "".join([
+    " ".join([
         "Based only on the documents above, provide an answer for the user.",
         "",
         "Question",

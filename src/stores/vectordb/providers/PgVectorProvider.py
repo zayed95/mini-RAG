@@ -137,7 +137,7 @@ class PgVectorProvider(VectorDBInterface):
 
         async with self.db_client() as session:
             async with session.begin():
-                count_sql = sql_text(f"SELECT COUNT(*) FROM f{collection_name}")
+                count_sql = sql_text(f"SELECT COUNT(*) FROM {collection_name}")
                 result = await session.execute(count_sql)
                 record_count = result.scalar_one()
 

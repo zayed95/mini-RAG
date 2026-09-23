@@ -149,7 +149,7 @@ async def search(request: Request, search_request: SearchRequest, project_id: in
     return JSONResponse(
         content={
             "signal": ResponseSignal.VECTORDB_SEARCH_SUCCESS.value,
-            "results": [result.model_dump_json() for result in results]
+            "results": [result.model_dump() for result in results]
         }
     )
 
