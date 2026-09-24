@@ -6,9 +6,11 @@ from stores.llm.LLMFactory import LLMFactory
 from stores.vectordb.VectorDBFactory import VectorDBFactory
 from stores.llm.templates.template_parser import TemplateParser
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from utils.metrics import setup_metrics
 
 app = FastAPI()
 
+setup_metrics(app=app)
 
 @app.on_event("startup")
 async def start_db_client():
