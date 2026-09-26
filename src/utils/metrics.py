@@ -7,7 +7,7 @@ REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP Requests', ['method',
 REQUEST_LATENCY = Histogram('http_requests_duration_seconds', 'HTTP Request Latency', ['method', 'endpoint'])
 
 class PrometheusMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request. call_next):
+    async def dispatch(self, request: Request, call_next):
 
         start_time = time.time()
         duration = time.time() - start_time
